@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# 📱 Contact Directory App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A clean and modern Contact Directory mobile app built using React Native (Expo).
 
-## Get started
+## 🚀 Features
 
-1. Install dependencies
+* Add contact (Name + Phone + Notes)
+* Delete contact with confirmation
+* Real-time search (filter by name)
+* Alphabetical sorting (A-Z)
+* Input validation (empty + phone format)
+* Avatar with initials
+* Clean card-based UI
+* Empty state handling
+
+## 🛠 Tech Stack
+
+* React Native (Expo)
+* Expo Router (Tabs)
+* TypeScript
+* useState (local state management)
+
+## ▶️ How to Run
+
+1. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. Start the app:
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Open in Expo Go (Android)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🧠 Design Decisions
 
-## Get a fresh project
+* Used local state instead of backend for simplicity and reliability within the 1-day timeline
+* Focused on clean UI and core functionality first
+* Structured code for easy future scalability
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
+## 📁 Folder Structure
+
+```
+app/(tabs)/index.tsx → Main screen
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## 🔮 Future Improvements
 
-To learn more about developing your project with Expo, look at the following resources:
+* Backend integration (Supabase)
+* Authentication (Google Login)
+* Cloud storage for contacts
+* Profile image upload
+* Edit contact feature
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 💡 Note
 
-Join our community of developers creating universal apps.
+This project was built as part of an internship assignment with focus on UI quality, usability, and clean code.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+## 🔗 GitHub Repo
+
+https://github.com/Havenmehta/contact-directory-app

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { supabase } from '../../supabase';
 
 type Contact = {
   id: string;
@@ -42,15 +43,38 @@ export default function ContactDirectory() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // App khulte hi contacts load karo
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  // Supabase se contacts fetch karo
+  const fetchContacts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      Alert.alert('Error', 'Could not load contacts');
+    } else {
+      setContacts(data || []);
+    }
+    setLoading(false);
+  };
 
   const handlePhoneChange = (text: string) => {
     const digitsOnly = text.replace(/[^0-9]/g, '');
     if (digitsOnly.length <= 10) setPhone(digitsOnly);
   };
 
-  const handleAddContact = () => {
+  // Supabase mein contact add karo
+  const handleAddContact = async () => {
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
 
@@ -63,24 +87,27 @@ export default function ContactDirectory() {
       return;
     }
 
-    const newContact: Contact = {
-  id: Date.now().toString(),
-  name: trimmedName,
-  phone: trimmedPhone,
-  notes,
-};
+    setLoading(true);
+    const { error } = await supabase.from('contacts').insert([
+      {
+        name: trimmedName,
+        phone: trimmedPhone,
+        notes: notes || '',
+      },
+    ]);
 
-    // Add and sort alphabetically
-    setContacts((prev) =>
-      [...prev, newContact].sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-      )
-    );
-    setName('');
-    setPhone('');
-    setNotes('');
+    if (error) {
+      Alert.alert('Error', 'Could not add contact');
+    } else {
+      setName('');
+      setPhone('');
+      setNotes('');
+      fetchContacts();
+    }
+    setLoading(false);
   };
 
+  // Supabase se contact delete karo
   const handleDelete = (id: string, contactName: string) => {
     Alert.alert(
       'Delete Contact',
@@ -90,14 +117,23 @@ export default function ContactDirectory() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () =>
-            setContacts((prev) => prev.filter((c) => c.id !== id)),
+          onPress: async () => {
+            const { error } = await supabase
+              .from('contacts')
+              .delete()
+              .eq('id', id);
+
+            if (error) {
+              Alert.alert('Error', 'Could not delete contact');
+            } else {
+              fetchContacts();
+            }
+          },
         },
       ]
     );
   };
 
-  // Search filter — naam se dhundo
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -115,10 +151,8 @@ export default function ContactDirectory() {
           <Text style={styles.contactName}>{item.name}</Text>
           <Text style={styles.contactPhone}>{item.phone}</Text>
           {item.notes ? (
-  <Text style={{ fontSize: 12, color: "#666" }}>
-    {item.notes}
-  </Text>
-) : null}
+            <Text style={{ fontSize: 12, color: '#666' }}>{item.notes}</Text>
+          ) : null}
         </View>
         <TouchableOpacity
           style={styles.deleteButton}
@@ -166,18 +200,21 @@ export default function ContactDirectory() {
           maxLength={10}
         />
         <TextInput
-  style={styles.input}
-  placeholder="Notes (optional)"
-  placeholderTextColor="#aaa"
-  value={notes}
-  onChangeText={setNotes}
-/>
+          style={styles.input}
+          placeholder="Notes (optional)"
+          placeholderTextColor="#aaa"
+          value={notes}
+          onChangeText={setNotes}
+        />
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, loading && { opacity: 0.6 }]}
           onPress={handleAddContact}
           activeOpacity={0.8}
+          disabled={loading}
         >
-          <Text style={styles.addButtonText}>+ Add Contact</Text>
+          <Text style={styles.addButtonText}>
+            {loading ? 'Saving...' : '+ Add Contact'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -192,13 +229,19 @@ export default function ContactDirectory() {
           onChangeText={setSearch}
           autoCapitalize="none"
         />
-        {/* Search clear button */}
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
             <Text style={styles.clearSearch}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Loading indicator */}
+      {loading && (
+        <Text style={{ textAlign: 'center', color: '#aaa', marginBottom: 8 }}>
+          Loading...
+        </Text>
+      )}
 
       {/* Contact List */}
       <FlatList
@@ -225,27 +268,15 @@ export default function ContactDirectory() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F0F2F5',
-  },
+  container: { flex: 1, backgroundColor: '#F0F2F5' },
   header: {
     backgroundColor: '#3F51B5',
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: '#C5CAE9',
-    marginTop: 4,
-  },
+  headerTitle: { fontSize: 22, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
+  headerSubtitle: { fontSize: 13, color: '#C5CAE9', marginTop: 4 },
   form: {
     backgroundColor: '#fff',
     margin: 16,
@@ -275,12 +306,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     alignItems: 'center',
   },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
+  addButtonText: { color: '#fff', fontSize: 15, fontWeight: '600', letterSpacing: 0.3 },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -296,21 +322,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   searchIcon: { fontSize: 15, marginRight: 8 },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    fontSize: 15,
-    color: '#333',
-  },
-  clearSearch: {
-    fontSize: 14,
-    color: '#aaa',
-    paddingHorizontal: 4,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
+  searchInput: { flex: 1, height: 44, fontSize: 15, color: '#333' },
+  clearSearch: { fontSize: 14, color: '#aaa', paddingHorizontal: 4 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -332,22 +346,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-  avatarText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  avatarText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   cardInfo: { flex: 1 },
-  contactName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A2E',
-    marginBottom: 3,
-  },
-  contactPhone: {
-    fontSize: 13,
-    color: '#888',
-  },
+  contactName: { fontSize: 15, fontWeight: '600', color: '#1A1A2E', marginBottom: 3 },
+  contactPhone: { fontSize: 13, color: '#888' },
   deleteButton: {
     width: 32,
     height: 32,
@@ -357,21 +359,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 8,
   },
-  deleteButtonText: {
-    color: '#E53935',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  emptyState: {
-    alignItems: 'center',
-    marginTop: 60,
-  },
+  deleteButtonText: { color: '#E53935', fontSize: 12, fontWeight: '700' },
+  emptyState: { alignItems: 'center', marginTop: 60 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 6,
-  },
+  emptyText: { fontSize: 16, fontWeight: '600', color: '#555', marginBottom: 6 },
   emptySubText: { fontSize: 13, color: '#aaa' },
 });

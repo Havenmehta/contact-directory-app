@@ -19,6 +19,9 @@ import { supabase } from '../../supabase';
 
 WebBrowser.maybeCompleteAuthSession();
 
+/**
+ * Type definition for Contact object based on Database schema [cite: 9]
+ */
 type Contact = {
   id: string;
   name: string;
@@ -27,6 +30,9 @@ type Contact = {
   image_url?: string;
 };
 
+/**
+ * Generates initials from the contact name for the fallback avatar [cite: 15]
+ */
 function getInitials(name: string): string {
   return name
     .trim()
@@ -41,6 +47,9 @@ const AVATAR_COLORS = [
   '#42A5F5', '#FF7043', '#66BB6A', '#EC407A',
 ];
 
+/**
+ * Assigns a consistent background color to avatars based on the name [cite: 15]
+ */
 function getAvatarColor(name: string): string {
   const index = name.charCodeAt(0) % AVATAR_COLORS.length;
   return AVATAR_COLORS[index];
@@ -52,11 +61,13 @@ export default function ContactDirectory() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null); // <-- BASE64 STATE
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null); 
 
+  /**
+   * Listen for authentication state changes via Supabase Auth [cite: 6]
+   */
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -69,12 +80,18 @@ export default function ContactDirectory() {
     return () => subscription.unsubscribe();
   }, []);
 
+  /**
+   * Fetch user-specific contacts upon successful login [cite: 13]
+   */
   useEffect(() => {
     if (user) {
       fetchContacts();
     }
   }, [user]);
 
+  /**
+   * Signs out the user and clears the local contact list [cite: 6]
+   */
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -84,6 +101,9 @@ export default function ContactDirectory() {
     }
   };
 
+  /**
+   * Initiates Google OAuth flow via Supabase [cite: 6]
+   */
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
@@ -131,6 +151,9 @@ export default function ContactDirectory() {
     }
   };
 
+  /**
+   * Retrieves contacts filtered by the authenticated user ID [cite: 8, 13]
+   */
   const fetchContacts = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -146,33 +169,38 @@ export default function ContactDirectory() {
     setLoading(false);
   };
 
+  /**
+   * Restricts phone input to digits only with a max length of 10 [cite: 9]
+   */
   const handlePhoneChange = (text: string) => {
     const digitsOnly = text.replace(/[^0-9]/g, '');
     if (digitsOnly.length <= 10) setPhone(digitsOnly);
   };
 
+  /**
+   * Opens device image library and allows user to pick a profile photo [cite: 11]
+   */
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
-      base64: true, // <-- AB IMAGE SEEDHA BASE64 MEIN BHI MILEGI
     });
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      setImageBase64(result.assets[0].base64 || null);
     }
   };
 
-  // 1. Naya Upload Logic (Using FormData - 100% Network Proof)
+  /**
+   * Uploads the selected image to Supabase Storage using FormData [cite: 11]
+   */
   const uploadImage = async (uri: string) => {
     try {
       const fileExt = uri.split('.').pop() || 'jpeg';
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      // FormData create kar rahe hain
       const formData = new FormData();
       formData.append('file', {
         uri: uri,
@@ -180,26 +208,23 @@ export default function ContactDirectory() {
         type: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
       } as any);
 
-      // Uploading through FormData
       const { error } = await supabase.storage
         .from('avatars')
         .upload(fileName, formData);
 
-      if (error) {
-        console.log("Supabase Error Details:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
       return data.publicUrl;
     } catch (error) {
       console.error("Image upload failed:", error);
-      Alert.alert("Upload Failed", "Network request failed. Console check karo.");
       return null;
     }
   };
 
-  // 2. Updated Handle Add Contact
+  /**
+   * Validates input and saves a new contact to the database [cite: 8, 9, 13]
+   */
   const handleAddContact = async () => {
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
@@ -215,11 +240,10 @@ export default function ContactDirectory() {
 
     setLoading(true);
 
-    // Image upload call
     let uploadedImageUrl = null;
     if (imageUri) {
       uploadedImageUrl = await uploadImage(imageUri);
-    } // <-- YEH BRACKET PEHLE MISS HO GAYA THA
+    }
     
     const { error } = await supabase.from('contacts').insert([
       {
@@ -238,11 +262,14 @@ export default function ContactDirectory() {
       setPhone('');
       setNotes('');
       setImageUri(null);
-      // setImageBase64(null); 
+      fetchContacts();
     }
-    fetchContacts(); // 
+    setLoading(false);
   };
 
+  /**
+   * Deletes a specific contact from the directory [cite: 8]
+   */
   const handleDelete = (id: string, contactName: string) => {
     Alert.alert(
       'Delete Contact',
@@ -269,6 +296,9 @@ export default function ContactDirectory() {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  /**
+   * Renders an individual contact card with conditional image loading [cite: 15]
+   */
   const renderContact = ({ item }: { item: Contact }) => {
     const avatarColor = getAvatarColor(item.name);
     const initials = getInitials(item.name);
@@ -301,6 +331,9 @@ export default function ContactDirectory() {
     );
   };
 
+  /**
+   * Login Screen UI [cite: 15]
+   */
   if (!user) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
@@ -323,6 +356,9 @@ export default function ContactDirectory() {
     );
   }
 
+  /**
+   * Main Directory UI with Keyboard handling [cite: 15, 19]
+   */
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -372,7 +408,7 @@ export default function ContactDirectory() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Phone Number (max 10 digits)"
+          placeholder="Phone Number"
           placeholderTextColor="#aaa"
           value={phone}
           onChangeText={handlePhoneChange}
@@ -443,6 +479,7 @@ export default function ContactDirectory() {
     </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0F2F5' },
   header: {

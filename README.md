@@ -1,75 +1,27 @@
-# 📱 Contact Directory App
+# 📋 Contact Directory App
 
-A clean and modern Contact Directory mobile app built using React Native (Expo).
+This is a mobile application built for my internship assignment using **React Native (Expo)** and **Supabase**. [span_2](start_span)[span_3](start_span)It allows users to securely manage their personal contacts with profile images[span_2](end_span)[span_3](end_span).
 
-## 🚀 Features
+## ✨ Features
 
-* Add contact (Name + Phone + Notes)
-* Delete contact with confirmation
-* Real-time search (filter by name)
-* Alphabetical sorting (A-Z)
-* Input validation (empty + phone format)
-* Avatar with initials
-* Clean card-based UI
-* Empty state handling
+* **[span_4](start_span)Google Login:** Secure authentication using Supabase Auth[span_4](end_span).
+* **[span_5](start_span)Contact Management:** You can add new contacts, view them in a list, and delete them[span_5](end_span).
+* **[span_6](start_span)Image Upload:** Supports picking photos from the gallery and saving them to Supabase Storage[span_6](end_span).
+* **[span_7](start_span)Data Privacy:** Uses Row Level Security (RLS) so users can only see their own contacts[span_7](end_span).
+* **Search Function:** Easily filter through your contact list by name.
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
-* React Native (Expo)
-* Expo Router (Tabs)
-* TypeScript
-* useState (local state management)
+* **[span_8](start_span)Frontend:** React Native (Expo)[span_8](end_span).
+* **[span_9](start_span)Backend:** Supabase (Database, Auth, and Storage)[span_9](end_span).
 
-## ▶️ How to Run
+## ⚙️ How to Setup
 
-1. Install dependencies:
+1. **Clone the repo:** `git clone <your-repo-url>`
+2. **Install dependencies:** `npm install`
+3. **Configure Supabase:** Add your project URL and Anon Key in the `supabase.ts` file.
+4. **Run the app:** Use the command `npx expo start -c`
+5. **Open on Device:** Scan the QR code using the **Expo Go** app on your phone.
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app:
-
-   ```bash
-   npx expo start
-   ```
-
-3. Open in Expo Go (Android)
-
----
-
-## 🧠 Design Decisions
-
-* Used local state instead of backend for simplicity and reliability within the 1-day timeline
-* Focused on clean UI and core functionality first
-* Structured code for easy future scalability
-
----
-
-## 📁 Folder Structure
-
-```
-app/(tabs)/index.tsx → Main screen
-```
-
----
-
-## 🔮 Future Improvements
-
-* Backend integration (Supabase)
-* Authentication (Google Login)
-* Cloud storage for contacts
-* Profile image upload
-* Edit contact feature
-
----
-
-## 💡 Note
-
-This project was built as part of an internship assignment with focus on UI quality, usability, and clean code.
-
----
-
-## 🔗 GitHub Repo
-
-https://github.com/Havenmehta/contact-directory-app
+## 💡 Technical Note
+I used **FormData** for image uploads to ensure the network requests work smoothly on mobile devices without any "Network Request Failed" errors.
